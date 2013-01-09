@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        .player{
+            position: absolute;
+            background: black;
+            width: 40px;
+            height: 40px;
+        }
+        .player span{
+            position: absolute;
+            left: 50px;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('http://localhost:3000'),
+                xpos = 0,
+                ypos = 0;
+        socket.on('connect', function (data) {
+            $(window).mousemove(function(event){
+                var nxpos = event.pageX,
+                        nypos = event.pageY;
+                if(xpos != nxpos || ypos != nypos){
+                    xpos = nxpos;
+                    ypos = nypos;
+                    socket.emit('mousemove', { xpos: xpos, ypos: ypos });
+                }
+            });
+        });
+        socket.on('newuser', function(data){
+            var player = data.player,
+                playerobj = createPlayer(player.id, player.name);
+            $('body').append(playerobj);
+        });
+        socket.on('existingusers', function(data){
+            var playerobjs = Array();
+            for(var player in data.players){
+                if(data.players.hasOwnProperty(player)){
+                    var player = data.players[player];
+                    playerobjs[playerobjs.length] = createPlayer(player.id, player.name);
+                }
+            }
+            $('body').append(playerobjs);
+        });
+        socket.on('playerpositions', function(data){
+            $('#' + data.player).css({ top: data.ypos, left: data.xpos });
+        });
+        socket.on('playerleft', function(data){
+            var player = data.player;
+            $('#' + player.id).remove();
+        });
+        function createPlayer(socketid, name){
+            var player = $('<div class="player" id="' + socketid + '" />');
+            player.css('background', randomColor());
+            player.append('<span>' + name + '</span>');
+            return player;
+        }
+        function randomColor(){
+            return 'rgb(' + randomNumber(255) + ',' + randomNumber(255) + ',' + randomNumber(255) + ')';
+        }
+        function randomNumber(max){
+            return Math.round(Math.random() * max);
+        }
+    </script>
+</body>
+</html>
