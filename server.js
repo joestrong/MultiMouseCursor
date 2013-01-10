@@ -1,19 +1,37 @@
 var http = require('http'),
-    app = http.createServer(requestHandler),
+    url = require('url'),
+    path = require('path'),
     fs = require('fs'),
+    app = http.createServer(requestHandler),
     io = require('socket.io').listen(app),
-    players = {};
+    players = {},
+    mimeTypes = {
+        "html": "text/html",
+        "jpeg": "image/jpeg",
+        "jpg": "image/jpeg",
+        "png": "image/png",
+        "js": "text/javascript",
+        "css": "text/css"};
 
 function requestHandler(req, res) {
-    fs.readFile(__dirname + '/index.html',function(err, data){
-        if(err){
-            res.writeHead(500)
-            {
-                return res.end('Error loading index.html');
-            }
+    var uri = url.parse(req.url).pathname;
+    if(uri == '/'){
+        uri = '/index.html'
+    }
+    var filename = path.join(process.cwd(), uri);
+    path.exists(filename, function(exists) {
+        if(!exists) {
+            console.log("not exists: " + filename);
+            res.writeHead(200, {'Content-Type': 'text/plain'});
+            res.write('404 Not Found\n');
+            res.end();
+            return;
         }
-        res.writeHead(200);
-        res.end(data);
+        var mimeType = mimeTypes[path.extname(filename).split(".")[1]];
+        res.writeHead(200, mimeType);
+
+        var fileStream = fs.createReadStream(filename);
+        fileStream.pipe(res);
     });
 }
 

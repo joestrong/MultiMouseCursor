@@ -5,13 +5,13 @@
     <style type="text/css">
         .player{
             position: absolute;
-            background: black;
-            width: 40px;
-            height: 40px;
+            background: url('cursor.png') no-repeat 0 0;
+            width: 24px;
+            height: 24px;
         }
         .player span{
             position: absolute;
-            left: 50px;
+            left: 26px;
         }
     </style>
 </head>
@@ -57,8 +57,8 @@
         });
         function createPlayer(socketid, name){
             var player = $('<div class="player" id="' + socketid + '" />');
-            player.css('background', randomColor());
             player.append('<span>' + name + '</span>');
+            player.find('span').css('color', randomColor());
             return player;
         }
         function randomColor(){
